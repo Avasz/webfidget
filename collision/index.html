@@ -69,7 +69,31 @@
 
         .controls {
             display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: stretch;
+        }
+
+        .inputs-row {
+            display: flex;
             gap: 20px;
+            justify-content: center;
+        }
+
+        .brand-link {
+            text-align: center;
+            color: var(--accent-dim);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            padding-top: 10px;
+            border-top: 1px solid rgba(102, 252, 241, 0.12);
+            letter-spacing: 1px;
+            transition: color 0.2s;
+        }
+        
+        .brand-link:hover {
+            color: var(--accent);
         }
 
         .stats {
@@ -225,7 +249,7 @@
 
         @media (max-width: 800px) {
             #ui-content { padding: 10px 10px 25px 10px; }
-            .controls {
+            .inputs-row {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
                 gap: 15px;
@@ -246,11 +270,11 @@
             #action-layer {
                 /* Float actions directly above the stats container on mobile */
                 top: auto;
-                bottom: 110px;
+                bottom: 100px;
                 right: 50%;
                 transform: translateX(50%);
             }
-            input[type="number"] { width: 100%; max-width: 90px; }
+            input[type="number"] { width: 100%; max-width: 110px; }
         }
     </style>
 </head>
@@ -270,25 +294,28 @@
     <div id="ui-layer">
         <div id="ui-content">
             <div class="panel controls" id="controlsWrap">
-                <div class="input-group">
-                    <span class="stat-label">Max Balls</span>
-                    <input type="number" id="maxBallsInput" value="100" min="2" max="1000">
+                <div class="inputs-row">
+                    <div class="input-group">
+                        <span class="stat-label">Max Balls</span>
+                        <input type="number" id="maxBallsInput" value="100" min="2" max="1000">
+                    </div>
+                    
+                    <div class="input-group">
+                        <span class="stat-label">Spawn/Sec</span>
+                        <input type="number" id="spawnRateInput" value="20" min="1" max="1000">
+                    </div>
+                    
+                    <div class="input-group">
+                        <span class="stat-label">Size %</span>
+                        <input type="number" id="sizeInput" value="100" min="10" max="500" step="10">
+                    </div>
+                    
+                    <div class="input-group">
+                        <span class="stat-label">Speed %</span>
+                        <input type="number" id="speedInput" value="100" min="10" max="500" step="10">
+                    </div>
                 </div>
-                
-                <div class="input-group">
-                    <span class="stat-label">Spawn/Sec</span>
-                    <input type="number" id="spawnRateInput" value="20" min="1" max="1000">
-                </div>
-                
-                <div class="input-group">
-                    <span class="stat-label">Size %</span>
-                    <input type="number" id="sizeInput" value="100" min="10" max="500" step="10">
-                </div>
-                
-                <div class="input-group">
-                    <span class="stat-label">Speed %</span>
-                    <input type="number" id="speedInput" value="100" min="10" max="500" step="10">
-                </div>
+                <a href="https://avasz.github.io/webfidget" target="_blank" class="brand-link">avasz.github.io/webfidget</a>
             </div>
             
             <div class="panel stats" id="statsWrap">
@@ -475,19 +502,21 @@
             const statsRect = statsWrap.getBoundingClientRect();
             
             const topUiHeight = ctrlsRect.bottom + 10;
-            const botUiHeight = canvas.height - statsRect.top + 10;
+            let botUiHeight = canvas.height - statsRect.top + 10;
+            
+            // Adjust overlay actions layout if on mobile and factor it cleanly into bottom bounds
+            if (window.innerWidth <= 800 && hasStarted) {
+                actionLayer.style.bottom = botUiHeight + 10 + 'px';
+                // Incorporate action buttons height to the bottom so circle shifts up and escapes them purely
+                botUiHeight += 70; 
+            }
             
             centerX = canvas.width / 2;
             const clearHeightSpace = canvas.height - topUiHeight - botUiHeight;
             centerY = topUiHeight + (clearHeightSpace / 2);
             
-            boundaryRadius = Math.min((canvas.width / 2) - 15, (clearHeightSpace / 2) - 15);
+            boundaryRadius = Math.min((canvas.width / 2) - 15, (clearHeightSpace / 2) - 10);
             if (boundaryRadius < 30) boundaryRadius = 30; 
-            
-            // Adjust overlay actions layout if on mobile
-            if (window.innerWidth <= 800) {
-                actionLayer.style.bottom = botUiHeight + 10 + 'px';
-            }
             
             if (!hasStarted) draw(); 
         }
@@ -523,6 +552,8 @@
             maxSpawnsPerSecond = parseInt(spawnRateInput.value) || 20;
             currentRadius = baseRadius * ((parseInt(sizeInput.value) || 100) / 100);
             
+            resize(); // recalculate bounds for mobile now that actionLayer spawned!
+            
             spawnBall(centerX - 20, centerY, baseInitialSpeed);
             spawnBall(centerX + 20, centerY, baseInitialSpeed);
             
@@ -554,6 +585,7 @@
             document.getElementById('repCol').textContent = totalCollisions;
             
             reportModal.style.display = 'block';
+            resize(); // recalculate spacing down
             draw(); 
         });
 
