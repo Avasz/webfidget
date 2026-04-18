@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cellular Bounce | Web Fidget</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --accent: #66fcf1;
+            --accent-dim: #45a29e;
+            --panel-bg: rgba(11, 12, 16, 0.85);
+            --text-color: #c5c6c7;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid rgba(102, 252, 241, 0.2);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 15px 20px;
+            pointer-events: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .controls {
+            align-self: flex-start;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .stats {
+            align-self: flex-end;
+            min-width: 180px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+        }
+
+        .stat-label {
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 12px;
+            align-self: center;
+        }
+
+        .stat-value {
+            color: var(--accent);
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(102, 252, 241, 0.5);
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        button {
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 0 10px rgba(102, 252, 241, 0.1);
+        }
+        
+        button.btn-danger {
+            color: #ff4d4d;
+            border-color: #ff4d4d;
+            box-shadow: 0 0 10px rgba(255, 77, 77, 0.1);
+        }
+
+        button:hover {
+            background: var(--accent);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.4);
+        }
+        
+        button.btn-danger:hover {
+            background: #ff4d4d;
+            color: var(--bg-color);
+            box-shadow: 0 0 20px rgba(255, 77, 77, 0.4);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        a.btn-back {
+            color: #888;
+            border: 1px solid #888;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+        a.btn-back:hover {
+            color: white;
+            border-color: white;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        input[type="number"] {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--accent-dim);
+            color: var(--accent);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', Courier, monospace;
+            width: 80px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 8px rgba(102, 252, 241, 0.3);
+        }
+
+        input[type="range"] {
+            width: 80px;
+            accent-color: var(--accent);
+        }
+
+        /* Modal Overlay */
+        #reportModal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            text-align: center;
+            min-width: 300px;
+            z-index: 100;
+            padding: 30px;
+        }
+        
+        #reportModal h2 {
+            margin-top: 0;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+        
+        #reportModal p {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 5px;
+        }
+
+        @media (max-width: 600px) {
+            #ui-layer {
+                padding: 10px;
+            }
+            .controls {
+                justify-content: center;
+            }
+            .panel {
+                padding: 12px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="simCanvas"></canvas>
+    
+    <div id="ui-layer">
+        <div class="panel controls">
+            <a href="../" class="btn-back">&lt; Hub</a>
+            <button id="pauseBtn" style="display: none;">Pause</button>
+            <button id="stopBtn" class="btn-danger" style="display: none;">Stop</button>
+            <div class="input-group">
+                <span class="stat-label">Max Balls</span>
+                <input type="number" id="maxBallsInput" value="100" min="2" max="1000">
+            </div>
+            <div class="input-group">
+                <span class="stat-label">Spawn/Sec Limit</span>
+                <input type="number" id="spawnRateInput" value="20" min="1" max="1000">
+            </div>
+            <div class="input-group">
+                <span class="stat-label">Speed</span>
+                <input type="range" id="speedInput" value="1" min="0.1" max="4" step="0.1">
+            </div>
+        </div>
+        
+        <div class="panel stats">
+            <div class="stat-row">
+                <span class="stat-label">Time</span>
+                <span class="stat-value" id="timeStat">0.0s</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">FPS</span>
+                <span class="stat-value" id="fpsStat">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Active Balls</span>
+                <span class="stat-value" id="ballsStat">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Collisions</span>
+                <span class="stat-value" id="collisionsStat">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="panel">
+        <h2>Simulation Report</h2>
+        <p>Execution Time:<span id="repTime" class="stat-value"></span></p>
+        <p>Peak FPS:<span id="repFps" class="stat-value"></span></p>
+        <p>Total Generated:<span id="repGen" class="stat-value"></span></p>
+        <p>Active Balls:<span id="repBalls" class="stat-value"></span></p>
+        <p>Total Collisions:<span id="repCol" class="stat-value"></span></p>
+        <button id="closeReportBtn" style="margin-top: 25px; width: 100%;">PLAY AGAIN</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // UI Elements
+        const timeStat = document.getElementById('timeStat');
+        const fpsStat = document.getElementById('fpsStat');
+        const ballsStat = document.getElementById('ballsStat');
+        const collisionsStat = document.getElementById('collisionsStat');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const maxBallsInput = document.getElementById('maxBallsInput');
+        const speedInput = document.getElementById('speedInput');
+        const spawnRateInput = document.getElementById('spawnRateInput');
+        const reportModal = document.getElementById('reportModal');
+        const closeReportBtn = document.getElementById('closeReportBtn');
+
+        // App States
+        let hasStarted = false;
+        let isPaused = false;
+        let isReportShowing = false;
+        
+        // Simulation Data
+        let balls = [];
+        let totalCollisions = 0;
+        let totalGenerated = 0;
+        let animationId;
+        
+        let maxBalls = 100;
+        let timeScale = 1;
+        let maxSpawnsPerSecond = 20;
+        let spawnTimestamps = []; 
+
+        // Physics Environment
+        let centerX, centerY, boundaryRadius;
+        const ballRadius = 8;
+        const initialSpeedLimit = 5;
+        const spawnSpeedLimit = 3;
+        const collisionCooldownFrames = 10;
+
+        // Performance & Timing
+        let lastTimestamp = 0;
+        let simTimeElapsed = 0; // accumulated simulation ms
+        let frameCount = 0;
+        let lastFpsUpdate = 0;
+        let currentFps = 0;
+        let peakFps = 0;
+
+        // Inputs
+        maxBallsInput.addEventListener('input', () => { maxBalls = parseInt(maxBallsInput.value) || 100; });
+        speedInput.addEventListener('input', () => { timeScale = parseFloat(speedInput.value) || 1; });
+        spawnRateInput.addEventListener('input', () => { maxSpawnsPerSecond = parseInt(spawnRateInput.value) || 20; });
+        
+        // Web Audio Context definition
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type, param) {
+            if (!audioCtx || audioCtx.state !== 'running') return;
+            const now = audioCtx.currentTime;
+
+            if (type === 'boundary') {
+                // Determine musical note based on angle
+                const frequencies = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
+                let normAngle = (param + Math.PI) / (2 * Math.PI); 
+                let noteIndex = Math.floor(normAngle * frequencies.length);
+                if (noteIndex >= frequencies.length) noteIndex = frequencies.length - 1;
+                
+                const baseFreq = frequencies[noteIndex];
+
+                const osc = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.connect(gain);
+                osc2.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(baseFreq, now);
+                osc2.type = 'triangle'; 
+                osc2.frequency.setValueAtTime(baseFreq * 2.02, now);
+
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.3, now + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+                
+                osc.start(now);
+                osc2.start(now);
+                osc.stop(now + 0.8);
+                osc2.stop(now + 0.8);
+                return;
+            }
+
+            if (type === 'spawn') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.linearRampToValueAtTime(800, now + 0.1);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            }
+        }
+
+        class Ball {
+            constructor(x, y, vx, vy) {
+                this.id = Math.random().toString(36).substr(2, 9);
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.radius = ballRadius;
+                this.cooldowns = new Map();
+                this.color = `hsl(${Math.random() * 360}, 100%, 65%)`;
+                this.mass = 1;
+            }
+
+            update() {
+                this.x += this.vx * timeScale;
+                this.y += this.vy * timeScale;
+
+                for (let [id, frames] of this.cooldowns.entries()) {
+                    if (frames <= 1) {
+                        this.cooldowns.delete(id);
+                    } else {
+                        this.cooldowns.set(id, frames - timeScale);
+                    }
+                }
+            }
+
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            centerX = canvas.width / 2;
+            centerY = canvas.height / 2;
+            
+            // Layout padding based on screen size so panels don't overlap boundary
+            let padding = window.innerWidth <= 600 ? 130 : 60;
+            // Also factor height to safely fit below top panels
+            let spaceVertical = 80; 
+            boundaryRadius = Math.min(centerX - padding/2, centerY - spaceVertical);
+            if (boundaryRadius < 50) boundaryRadius = 50; 
+            
+            if (!hasStarted) draw(); // Initial paint bounds
+        }
+
+        window.addEventListener('resize', resize);
+        
+        function spawnBall(x, y, speedLimit) {
+            if (balls.length >= maxBalls) return null;
+            
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * speedLimit + 1;
+            const vx = Math.cos(angle) * speed;
+            const vy = Math.sin(angle) * speed;
+            
+            const newBall = new Ball(x, y, vx, vy);
+            balls.push(newBall);
+            totalGenerated++;
+            return newBall;
+        }
+
+        function initSimulation() {
+            initAudio(); 
+            hasStarted = true;
+            isPaused = false;
+            isReportShowing = false;
+            
+            balls = [];
+            totalCollisions = 0;
+            totalGenerated = 0;
+            simTimeElapsed = 0;
+            peakFps = 0;
+            spawnTimestamps = [];
+            lastTimestamp = performance.now();
+            
+            // Adjust buttons
+            pauseBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'inline-block';
+            pauseBtn.textContent = 'Pause';
+            
+            maxBalls = parseInt(maxBallsInput.value) || 100;
+            timeScale = parseFloat(speedInput.value) || 1;
+            maxSpawnsPerSecond = parseInt(spawnRateInput.value) || 20;
+            
+            // Spawning first two
+            spawnBall(centerX - 20, centerY, initialSpeedLimit);
+            spawnBall(centerX + 20, centerY, initialSpeedLimit);
+            
+            requestAnimationFrame(loop);
+        }
+
+        // Action handles
+        pauseBtn.addEventListener('click', () => {
+            if (!hasStarted) return;
+            isPaused = !isPaused;
+            pauseBtn.textContent = isPaused ? "Resume" : "Pause";
+            if (!isPaused) {
+                lastTimestamp = performance.now();
+                requestAnimationFrame(loop);
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (!hasStarted) return;
+            hasStarted = false;
+            isPaused = false;
+            isReportShowing = true;
+            
+            pauseBtn.style.display = 'none';
+            stopBtn.style.display = 'none';
+            
+            // Show report
+            document.getElementById('repTime').textContent = (simTimeElapsed / 1000).toFixed(1) + "s";
+            document.getElementById('repFps').textContent = peakFps;
+            document.getElementById('repGen').textContent = totalGenerated;
+            document.getElementById('repBalls').textContent = balls.length;
+            document.getElementById('repCol').textContent = totalCollisions;
+            
+            reportModal.style.display = 'block';
+            draw(); // Refresh canvas to render without balls or START mark properly
+        });
+
+        closeReportBtn.addEventListener('click', () => {
+            reportModal.style.display = 'none';
+            isReportShowing = false;
+            timeStat.textContent = '0.0s';
+            ballsStat.textContent = '0';
+            fpsStat.textContent = '0';
+            collisionsStat.textContent = '0';
+            draw();
+        });
+
+        // Click to Start
+        canvas.addEventListener('click', (e) => {
+            if (!hasStarted && !isReportShowing) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left - centerX;
+                const y = e.clientY - rect.top - centerY;
+                if (Math.hypot(x, y) < boundaryRadius) {
+                    initSimulation();
+                }
+            }
+        });
+
+        function handleBoundaryCollision(ball) {
+            const dx = ball.x - centerX;
+            const dy = ball.y - centerY;
+            const distSq = dx * dx + dy * dy;
+            const maxDist = boundaryRadius - ball.radius;
+
+            if (distSq > maxDist * maxDist) {
+                const angle = Math.atan2(dy, dx);
+                playSound('boundary', angle); 
+                
+                const dist = Math.sqrt(distSq);
+                const nx = dx / dist;
+                const ny = dy / dist;
+
+                ball.x = centerX + nx * maxDist;
+                ball.y = centerY + ny * maxDist;
+
+                const dotProduct = ball.vx * nx + ball.vy * ny;
+                ball.vx = ball.vx - 2 * dotProduct * nx;
+                ball.vy = ball.vy - 2 * dotProduct * ny;
+                
+                const speedSq = ball.vx * ball.vx + ball.vy * ball.vy;
+                const MaxSpeedSq = 100; 
+                if(speedSq > MaxSpeedSq) {
+                    const speed = Math.sqrt(speedSq);
+                    ball.vx = (ball.vx / speed) * Math.sqrt(MaxSpeedSq);
+                    ball.vy = (ball.vy / speed) * Math.sqrt(MaxSpeedSq);
+                }
+            }
+        }
+
+        function handleBallCollisions(now) {
+            let newlySpawned = [];
+
+            for (let i = 0; i < balls.length; i++) {
+                for (let j = i + 1; j < balls.length; j++) {
+                    const b1 = balls[i];
+                    const b2 = balls[j];
+
+                    const dx = b2.x - b1.x;
+                    const dy = b2.y - b1.y;
+                    const distSq = dx * dx + dy * dy;
+                    const minDist = b1.radius + b2.radius;
+
+                    if (distSq < minDist * minDist) {
+                        const dist = Math.sqrt(distSq);
+                        if (dist === 0) continue; 
+                        
+                        const overlap = minDist - dist;
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+
+                        const correctionX = nx * (overlap / 2);
+                        const correctionY = ny * (overlap / 2);
+                        
+                        b1.x -= correctionX;
+                        b1.y -= correctionY;
+                        b2.x += correctionX;
+                        b2.y += correctionY;
+
+                        if (!b1.cooldowns.has(b2.id) && !b2.cooldowns.has(b1.id)) {
+                            // Sound removed as requested
+                            const kx = b1.vx - b2.vx;
+                            const ky = b1.vy - b2.vy;
+                            const p = 2 * (nx * kx + ny * ky) / (b1.mass + b2.mass);
+                            
+                            b1.vx = b1.vx - p * b2.mass * nx;
+                            b1.vy = b1.vy - p * b2.mass * ny;
+                            b2.vx = b2.vx + p * b1.mass * nx;
+                            b2.vy = b2.vy + p * b1.mass * ny;
+
+                            b1.cooldowns.set(b2.id, collisionCooldownFrames);
+                            b2.cooldowns.set(b1.id, collisionCooldownFrames);
+
+                            totalCollisions++;
+
+                            if ((balls.length + newlySpawned.length < maxBalls) && 
+                                (spawnTimestamps.length < maxSpawnsPerSecond)) {
+                                playSound('spawn');
+                                
+                                const spawnX = b1.x + nx * b1.radius;
+                                const spawnY = b1.y + ny * b1.radius;
+                                const newBall = new Ball(
+                                    spawnX, 
+                                    spawnY, 
+                                    (Math.random() - 0.5) * spawnSpeedLimit, 
+                                    (Math.random() - 0.5) * spawnSpeedLimit
+                                );
+                                
+                                newBall.cooldowns.set(b1.id, collisionCooldownFrames);
+                                newBall.cooldowns.set(b2.id, collisionCooldownFrames);
+                                b1.cooldowns.set(newBall.id, collisionCooldownFrames);
+                                b2.cooldowns.set(newBall.id, collisionCooldownFrames);
+                                
+                                newlySpawned.push(newBall);
+                                totalGenerated++;
+                                spawnTimestamps.push(now);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (newlySpawned.length > 0) balls.push(...newlySpawned);
+        }
+
+        function update(now) {
+            for (let ball of balls) {
+                ball.update();
+                handleBoundaryCollision(ball);
+            }
+            handleBallCollisions(now);
+            
+            // Constrain
+            for (let ball of balls) {
+                const dx = ball.x - centerX;
+                const dy = ball.y - centerY;
+                const distSq = dx * dx + dy * dy;
+                const maxDist = boundaryRadius - ball.radius;
+                if(distSq > maxDist * maxDist) {
+                    const dist = Math.sqrt(distSq);
+                    ball.x = centerX + (dx / dist) * maxDist;
+                    ball.y = centerY + (dy / dist) * maxDist;
+                }
+            }
+            
+            ballsStat.textContent = balls.length;
+            collisionsStat.textContent = totalCollisions;
+            timeStat.textContent = (simTimeElapsed / 1000).toFixed(1) + "s";
+        }
+
+        function draw() {
+            ctx.fillStyle = 'rgba(11, 12, 16, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, boundaryRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(102, 252, 241, 0.4)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.shadowColor = 'rgba(102, 252, 241, 0.5)';
+            ctx.shadowBlur = 20;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            if (!hasStarted && !isReportShowing) {
+                ctx.fillStyle = 'rgba(102, 252, 241, 0.7)';
+                const fSize = Math.max(20, boundaryRadius / 4);
+                ctx.font = `bold ${fSize}px 'Segoe UI', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText("▶ START", centerX, centerY);
+                
+                // Pulsing ring guide
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, (Math.sin(performance.now()/300)*10) + boundaryRadius/2.5, 0, Math.PI*2);
+                ctx.strokeStyle = 'rgba(102, 252, 241, 0.1)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            if (hasStarted) {
+                for (let ball of balls) ball.draw(ctx);
+            }
+        }
+
+        function loop(timestamp) {
+            if (!hasStarted || isPaused) return;
+            
+            const dt = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+            simTimeElapsed += dt;
+
+            spawnTimestamps = spawnTimestamps.filter(t => performance.now() - t < 1000);
+
+            frameCount++;
+            if (timestamp - lastFpsUpdate >= 1000) {
+                currentFps = Math.round((frameCount * 1000) / (timestamp - lastFpsUpdate));
+                if (currentFps > peakFps) peakFps = currentFps;
+                fpsStat.textContent = currentFps;
+                frameCount = 0;
+                lastFpsUpdate = timestamp;
+            }
+
+            update(performance.now());
+            draw();
+
+            animationId = requestAnimationFrame(loop);
+        }
+
+        // Init blank state
+        resize();
+    </script>
+</body>
+</html>

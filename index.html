@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Fidget</title>
+    <style>
+        :root { --bg: #0b0c10; --accent: #66fcf1; --text: #c5c6c7; }
+        body { margin: 0; padding: 40px; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; flex-direction: column; align-items: center; }
+        h1 { color: var(--accent); letter-spacing: 2px; }
+        .grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 30px; }
+        .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(102, 252, 241, 0.4); padding: 20px; border-radius: 12px; text-decoration: none; color: var(--text); padding: 30px 40px; transition: transform 0.2s, box-shadow 0.2s; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 5px 20px rgba(102, 252, 241, 0.4); border-color: var(--accent); }
+        .card h2 { margin: 0 0 10px 0; color: var(--accent); }
+    </style>
+</head>
+<body>
+    <h1>WEB FIDGET</h1>
+    <p>A collection of chaotic physics toy sandbox simulations.</p>
+    <div class="grid">
+        <a href="./collision/" class="card">
+            <h2>Cellular Bounce</h2>
+            <p>Musical boundary physics simulation sandbox.</p>
+        </a>
+    </div>
+</body>
+</html>
