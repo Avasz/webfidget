@@ -43,28 +43,40 @@
             height: 100vh;
         }
         
-        #toggleUiBtn {
+        #quick-toggles {
             position: absolute;
             top: 15px;
             right: 15px;
             z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toggle-btn {
             background: var(--panel-bg);
             border: 1px solid var(--accent);
             color: var(--accent);
             border-radius: 50%;
             cursor: pointer;
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 16px;
+            padding: 0;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            transition: transform 0.2s;
+            transition: transform 0.2s, background-color 0.2s;
         }
         
-        #toggleUiBtn:active {
+        .toggle-btn:active {
             transform: scale(0.9);
+        }
+        .toggle-btn.btn-disabled {
+            color: #888;
+            border-color: #555;
+            text-decoration: line-through;
         }
 
         #ui-layer {
@@ -83,7 +95,7 @@
             justify-content: space-between;
             height: 100%;
             padding: 15px;
-            padding-right: 55px; /* Give right padding so it avoids the toggle button */
+            padding-right: 55px; /* right padding to avoid the floating toggles */
         }
 
         .panel {
@@ -134,7 +146,7 @@
             font-family: 'Courier New', Courier, monospace;
         }
 
-        button {
+        button.action {
             background: transparent;
             color: var(--accent);
             border: 2px solid var(--accent);
@@ -147,27 +159,28 @@
             transition: all 0.2s;
             box-shadow: 0 0 10px rgba(102, 252, 241, 0.1);
             font-size: 12px;
+            pointer-events: auto;
         }
         
-        button.btn-danger {
+        button.action.btn-danger {
             color: #ff4d4d;
             border-color: #ff4d4d;
             box-shadow: 0 0 10px rgba(255, 77, 77, 0.1);
         }
 
-        button:hover {
+        button.action:hover {
             background: var(--accent);
             color: var(--bg-color);
             box-shadow: 0 0 20px rgba(102, 252, 241, 0.4);
         }
         
-        button.btn-danger:hover {
+        button.action.btn-danger:hover {
             background: #ff4d4d;
             color: var(--bg-color);
             box-shadow: 0 0 20px rgba(255, 77, 77, 0.4);
         }
 
-        button:active {
+        button.action:active {
             transform: scale(0.95);
         }
         
@@ -203,6 +216,7 @@
             display: inline-block;
             white-space: nowrap;
             font-size: 12px;
+            pointer-events: auto;
         }
         a.btn-back:hover {
             color: white;
@@ -231,13 +245,6 @@
         input[type="number"]:focus {
             border-color: var(--accent);
             box-shadow: 0 0 8px rgba(102, 252, 241, 0.3);
-        }
-
-        input[type="range"] {
-            width: 70px;
-            accent-color: var(--accent);
-            height: 30px;
-            margin: 0;
         }
 
         /* Modal Overlay */
@@ -283,6 +290,8 @@
         @media (max-width: 800px) {
             #ui-content {
                 padding: 10px;
+                padding-right: 50px;
+                padding-bottom: 30px;
             }
             .controls {
                 justify-content: center;
@@ -316,16 +325,19 @@
 <body>
     <canvas id="simCanvas"></canvas>
     
-    <button id="toggleUiBtn" title="Toggle Controls">⚙</button>
-    
+    <div id="quick-toggles">
+        <button id="toggleControlsBtn" class="toggle-btn" title="Toggle Controls">👁</button>
+        <button id="toggleStatsBtn" class="toggle-btn" title="Toggle Stats">👁</button>
+    </div>
+
     <div id="ui-layer">
         <div id="ui-content">
-            <div class="panel controls">
+            <div class="panel controls" id="controlsWrap">
                 <a href="../" class="btn-back">Hub</a>
                 <a href="https://avasz.github.io/webfidget" target="_blank" class="brand-pill">avasz.github.io/webfidget</a>
                 
-                <button id="pauseBtn" style="display: none;">Pause</button>
-                <button id="stopBtn" class="btn-danger" style="display: none;">Stop</button>
+                <button id="pauseBtn" class="action" style="display: none;">Pause</button>
+                <button id="stopBtn" class="action btn-danger" style="display: none;">Stop</button>
                 
                 <div class="input-group">
                     <span class="stat-label">Max Balls</span>
@@ -338,18 +350,18 @@
                 </div>
                 
                 <div class="input-group">
-                    <span class="stat-label">Size</span>
-                    <input type="range" id="sizeInput" value="8" min="2" max="30" step="1">
+                    <span class="stat-label">Size %</span>
+                    <input type="number" id="sizeInput" value="100" min="10" max="500" step="10">
                 </div>
                 
                 <div class="input-group">
-                    <span class="stat-label">Speed</span>
-                    <input type="range" id="speedInput" value="1" min="0.1" max="4" step="0.1">
+                    <span class="stat-label">Speed %</span>
+                    <input type="number" id="speedInput" value="100" min="10" max="500" step="10">
                 </div>
                 
                 <div class="input-group">
                     <label style="display:flex; align-items:center; gap:3px; cursor:pointer; height: 30px;" class="stat-label">
-                        <input type="checkbox" id="muteColSoundInput" style="margin:0; width:14px; height:14px; accent-color: var(--accent);">
+                        <input type="checkbox" id="muteColSoundInput" style="margin:0; width:14px; height:14px; accent-color: var(--accent); pointer-events:auto;">
                         Mute
                     </label>
                 </div>
@@ -386,7 +398,7 @@
         <p>Total Generated:<span id="repGen" class="stat-value"></span></p>
         <p>Active Balls:<span id="repBalls" class="stat-value"></span></p>
         <p>Total Collisions:<span id="repCol" class="stat-value"></span></p>
-        <button id="closeReportBtn" style="margin-top: 25px; width: 100%;">PLAY AGAIN</button>
+        <button id="closeReportBtn" class="action" style="margin-top: 25px; width: 100%;">PLAY AGAIN</button>
     </div>
 
     <script>
@@ -399,12 +411,13 @@
         const ballsStat = document.getElementById('ballsStat');
         const collisionsStat = document.getElementById('collisionsStat');
         
-        const toggleUiBtn = document.getElementById('toggleUiBtn');
-        const uiContent = document.getElementById('ui-content');
+        const toggleControlsBtn = document.getElementById('toggleControlsBtn');
+        const toggleStatsBtn = document.getElementById('toggleStatsBtn');
+        const controlsWrap = document.getElementById('controlsWrap');
+        const statsWrap = document.getElementById('statsWrap');
         
         const pauseBtn = document.getElementById('pauseBtn');
         const stopBtn = document.getElementById('stopBtn');
-        const statsWrap = document.getElementById('statsWrap');
         
         const maxBallsInput = document.getElementById('maxBallsInput');
         const speedInput = document.getElementById('speedInput');
@@ -419,27 +432,28 @@
         let hasStarted = false;
         let isPaused = false;
         let isReportShowing = false;
-        let isUiVisible = true;
+        let isControlsVisible = true;
+        let isStatsVisible = true;
         
         // Simulation Data
         let balls = [];
         let totalCollisions = 0;
         let totalGenerated = 0;
         let animationId;
-        
-        let maxBalls = 100;
-        let timeScale = 1;
-        let maxSpawnsPerSecond = 20;
         let spawnTimestamps = []; 
         let muteCollisions = false;
 
-        // Dynamics tailored for size defaults
+        // Configuration
         const isMobileScreen = window.innerWidth <= 800;
-        let ballRadius = isMobileScreen ? 3 : 8;
-        sizeInput.value = ballRadius;
+        let baseRadius = isMobileScreen ? 3 : 8;
+        let baseInitialSpeed = isMobileScreen ? 3 : 5;
+        let baseSpawnSpeed = isMobileScreen ? 2 : 3;
         
-        let initialSpeedLimit = isMobileScreen ? 3 : 5;
-        let spawnSpeedLimit = isMobileScreen ? 2 : 3;
+        // Active configuration derived from UI percentages
+        let maxBalls = 100;
+        let maxSpawnsPerSecond = 20;
+        let timeScale = 1.0; 
+        let currentRadius = baseRadius;
 
         // Physics Environment
         let centerX, centerY, boundaryRadius;
@@ -453,29 +467,43 @@
         let currentFps = 0;
         let peakFps = 0;
 
-        // Inputs Binding
-        toggleUiBtn.addEventListener('click', () => {
-            isUiVisible = !isUiVisible;
-            uiContent.style.display = isUiVisible ? 'flex' : 'none';
+        // Toggles
+        toggleControlsBtn.addEventListener('click', () => {
+            isControlsVisible = !isControlsVisible;
+            controlsWrap.style.display = isControlsVisible ? 'flex' : 'none';
+            toggleControlsBtn.classList.toggle('btn-disabled', !isControlsVisible);
+            resize(); 
+        });
+
+        toggleStatsBtn.addEventListener('click', () => {
+            isStatsVisible = !isStatsVisible;
+            statsWrap.style.display = isStatsVisible ? 'flex' : 'none';
+            toggleStatsBtn.classList.toggle('btn-disabled', !isStatsVisible);
             resize(); 
         });
 
         maxBallsInput.addEventListener('input', () => { maxBalls = parseInt(maxBallsInput.value) || 100; });
-        speedInput.addEventListener('input', () => { timeScale = parseFloat(speedInput.value) || 1; });
         spawnRateInput.addEventListener('input', () => { maxSpawnsPerSecond = parseInt(spawnRateInput.value) || 20; });
         muteColSoundInput.addEventListener('change', (e) => { muteCollisions = e.target.checked; });
         
+        speedInput.addEventListener('input', () => { 
+            let percent = parseInt(speedInput.value) || 100;
+            timeScale = percent / 100; 
+        });
+
         sizeInput.addEventListener('input', () => { 
-            ballRadius = parseInt(sizeInput.value) || 8; 
+            let percent = parseInt(sizeInput.value) || 100; 
+            currentRadius = baseRadius * (percent / 100);
+            if (currentRadius < 1) currentRadius = 1;
             for(let b of balls) {
-                b.radius = ballRadius;
+                b.radius = currentRadius;
             }
             if(!hasStarted && !isReportShowing && balls.length === 0) {
                 draw();
             }
         });
         
-        // Web Audio Context definition
+        // Web Audio
         let audioCtx;
         function initAudio() {
             if (!audioCtx) {
@@ -524,7 +552,6 @@
 
             if (type === 'spawn') {
                 if (muteCollisions) return; 
-                
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
@@ -546,7 +573,7 @@
                 this.y = y;
                 this.vx = vx;
                 this.vy = vy;
-                this.radius = ballRadius; 
+                this.radius = currentRadius; 
                 this.cooldowns = new Map();
                 this.color = `hsl(${Math.random() * 360}, 100%, 65%)`;
                 this.mass = 1;
@@ -579,28 +606,18 @@
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            const isMobile = window.innerWidth <= 800;
 
-            if (isMobile && isUiVisible) {
-                // To guarantee pure clearance on mobile, we capture the bounding constraints of the control panel overlays
-                // and perfectly map the circle in the remaining center space safely.
-                const controlsRect = document.querySelector('.controls').getBoundingClientRect();
-                const statsRect = document.querySelector('#statsWrap').getBoundingClientRect();
-                
-                const topUiHeight = controlsRect.bottom + 10;
-                const botUiHeight = canvas.height - statsRect.top + 10;
-                
-                centerX = canvas.width / 2;
-                const clearHeightSpace = canvas.height - topUiHeight - botUiHeight;
-                centerY = topUiHeight + (clearHeightSpace / 2);
-                
-                boundaryRadius = Math.min((canvas.width / 2) - 10, (clearHeightSpace / 2) - 10);
-            } else {
-                centerX = canvas.width / 2;
-                centerY = canvas.height / 2;
-                let padding = isUiVisible ? 40 : 15;
-                boundaryRadius = Math.min(canvas.width/2 - padding, canvas.height/2 - padding);
-            }
+            const ctrlsRect = isControlsVisible ? controlsWrap.getBoundingClientRect() : null;
+            const statsRect = isStatsVisible ? statsWrap.getBoundingClientRect() : null;
+            
+            const topUiHeight = ctrlsRect ? ctrlsRect.bottom + 10 : 20;
+            const botUiHeight = statsRect ? canvas.height - statsRect.top + 10 : 20;
+            
+            centerX = canvas.width / 2;
+            const clearHeightSpace = canvas.height - topUiHeight - botUiHeight;
+            centerY = topUiHeight + (clearHeightSpace / 2);
+            
+            boundaryRadius = Math.min((canvas.width / 2) - 15, (clearHeightSpace / 2) - 15);
 
             if (boundaryRadius < 30) boundaryRadius = 30; 
             
@@ -645,13 +662,13 @@
             
             // Re-read inputs
             maxBalls = parseInt(maxBallsInput.value) || 100;
-            timeScale = parseFloat(speedInput.value) || 1;
+            timeScale = (parseInt(speedInput.value) || 100) / 100;
             maxSpawnsPerSecond = parseInt(spawnRateInput.value) || 20;
-            ballRadius = parseInt(sizeInput.value) || 8;
+            currentRadius = baseRadius * ((parseInt(sizeInput.value) || 100) / 100);
             muteCollisions = muteColSoundInput.checked;
             
-            spawnBall(centerX - 20, centerY, initialSpeedLimit);
-            spawnBall(centerX + 20, centerY, initialSpeedLimit);
+            spawnBall(centerX - 20, centerY, baseInitialSpeed);
+            spawnBall(centerX + 20, centerY, baseInitialSpeed);
             
             requestAnimationFrame(loop);
         }
@@ -693,11 +710,10 @@
             fpsStat.textContent = '0';
             collisionsStat.textContent = '0';
             draw();
-            resize(); // recalc
+            resize(); // recalc bounds just in case
         });
 
         canvas.addEventListener('click', (e) => {
-            // Check if user clicked on UI layer elements directly - don't start sim if they did!
             if (!hasStarted && !isReportShowing && e.target.tagName === 'CANVAS') {
                 const rect = canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left - centerX;
@@ -792,8 +808,8 @@
                                 const newBall = new Ball(
                                     spawnX, 
                                     spawnY, 
-                                    (Math.random() - 0.5) * spawnSpeedLimit, 
-                                    (Math.random() - 0.5) * spawnSpeedLimit
+                                    (Math.random() - 0.5) * baseSpawnSpeed, 
+                                    (Math.random() - 0.5) * baseSpawnSpeed
                                 );
                                 
                                 newBall.cooldowns.set(b1.id, collisionCooldownFrames);
@@ -841,15 +857,6 @@
             ctx.fillStyle = 'rgba(11, 12, 16, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Embedded watermark directly in the background canvas so it can never be hidden
-            ctx.fillStyle = 'rgba(102, 252, 241, 0.15)';
-            const wmSize = isMobileScreen ? 14 : 20;
-            ctx.font = `bold ${wmSize}px 'Courier New', monospace`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            // Paint it directly below the center inside the circle
-            ctx.fillText("avasz.github.io/webfidget", centerX, centerY + boundaryRadius - 30);
-
             ctx.beginPath();
             ctx.arc(centerX, centerY, boundaryRadius, 0, Math.PI * 2);
             ctx.strokeStyle = 'rgba(102, 252, 241, 0.4)';
@@ -867,10 +874,10 @@
                 ctx.font = `bold ${fSize}px 'Segoe UI', sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText("▶ START", centerX, centerY - 20); // slightly offset to account for watermark
+                ctx.fillText("▶ START", centerX, centerY); 
                 
                 ctx.beginPath();
-                ctx.arc(centerX, centerY - 20, (Math.sin(performance.now()/300)*10) + boundaryRadius/2.8, 0, Math.PI*2);
+                ctx.arc(centerX, centerY, (Math.sin(performance.now()/300)*10) + boundaryRadius/2.8, 0, Math.PI*2);
                 ctx.strokeStyle = 'rgba(102, 252, 241, 0.1)';
                 ctx.lineWidth = 2;
                 ctx.stroke();
