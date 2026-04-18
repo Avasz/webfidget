@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cellular Bounce | Web Fidget</title>
+    <title>Collision | Web Fidget</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZRVXXK6GYF"></script>
     <script>
@@ -54,7 +54,7 @@
             align-items: center;
             height: 100%;
             padding: 15px;
-            padding-bottom: 30px;
+            padding-bottom: 25px;
         }
 
         .panel {
@@ -72,12 +72,26 @@
             flex-direction: column;
             gap: 12px;
             align-items: stretch;
+            width: 100%;
+        }
+
+        .brand-title {
+            text-align: center;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 4px;
+            font-size: 18px;
+            margin: 0;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
         }
 
         .inputs-row {
             display: flex;
             gap: 20px;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         .brand-link {
@@ -92,8 +106,14 @@
             transition: color 0.2s;
         }
         
-        .brand-link:hover {
-            color: var(--accent);
+        .brand-link:hover { color: var(--accent); }
+
+        #bottomUiWrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
         }
 
         .stats {
@@ -133,11 +153,11 @@
         
         .input-group .stat-label { margin-bottom: 6px; }
 
-        input[type="number"] {
+        .input-styled {
             background: rgba(0,0,0,0.5);
             border: 1px solid rgba(102, 252, 241, 0.3);
             color: var(--accent);
-            padding: 6px 0;
+            padding: 6px 4px;
             text-align: center;
             border-radius: 8px;
             font-family: 'Courier New', Courier, monospace;
@@ -147,21 +167,28 @@
             outline: none;
             transition: all 0.2s;
         }
+        
+        select.input-styled {
+            width: auto;
+            min-width: 100px;
+            cursor: pointer;
+            padding: 6px 10px;
+        }
+        select.input-styled option {
+            background: var(--bg-color);
+            color: var(--accent);
+        }
 
-        input[type="number"]:focus {
+        .input-styled:focus {
             border-color: var(--accent);
             box-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
             background: rgba(0,0,0,0.8);
         }
         
-        /* Floating Play/Stop Action Layer */
+        /* Actions Layout within flow */
         #action-layer {
-            position: absolute;
-            top: 20px;
-            right: 20px;
             display: flex;
-            gap: 12px;
-            z-index: 1500;
+            gap: 15px;
             pointer-events: auto;
         }
 
@@ -171,22 +198,18 @@
             color: var(--accent);
             border-radius: 50%;
             cursor: pointer;
-            width: 44px;
-            height: 44px;
+            width: 50px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             transition: all 0.2s;
-            padding: 10px;
+            padding: 12px;
             backdrop-filter: blur(8px);
         }
         
-        .icon-btn svg {
-            width: 100%;
-            height: 100%;
-            fill: currentColor;
-        }
+        .icon-btn svg { width: 100%; height: 100%; fill: currentColor; }
 
         .icon-btn:hover {
             background: var(--accent);
@@ -194,18 +217,10 @@
             transform: scale(1.05);
         }
         
-        .icon-btn:active {
-            transform: scale(0.95);
-        }
+        .icon-btn:active { transform: scale(0.95); }
 
-        .icon-btn.btn-danger {
-            color: #ff4d4d;
-            border-color: #ff4d4d;
-        }
-        .icon-btn.btn-danger:hover {
-            background: #ff4d4d;
-            color: var(--bg-color);
-        }
+        .icon-btn.btn-danger { color: #ff4d4d; border-color: #ff4d4d; }
+        .icon-btn.btn-danger:hover { background: #ff4d4d; color: var(--bg-color); }
 
         /* Modal Overlay */
         #reportModal {
@@ -220,9 +235,7 @@
             pointer-events: auto;
         }
         
-        #reportModal h2 {
-            margin-top: 0; color: var(--accent); margin-bottom: 5px;
-        }
+        #reportModal h2 { margin-top: 0; color: var(--accent); margin-bottom: 5px; }
         
         #reportModal .modal-src {
             color: #aaa; text-decoration: none; font-size: 12px;
@@ -248,92 +261,99 @@
         }
 
         @media (max-width: 800px) {
-            #ui-content { padding: 10px 10px 25px 10px; }
-            .inputs-row {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
-                width: 100%;
-                max-width: 350px;
-            }
-            .panel { padding: 15px; }
-            .stats {
-                flex-wrap: wrap;
-                gap: 12px;
-            }
+            #ui-content { padding: 10px; }
+            .inputs-row { padding-bottom: 5px; gap: 8px; }
+            .panel { padding: 15px 10px; }
+            .stats { flex-wrap: wrap; gap: 8px; }
             .stat-row {
                 background: rgba(0,0,0,0.3);
                 border: 1px solid rgba(102, 252, 241, 0.1);
-                padding: 6px 15px;
+                padding: 6px 12px;
                 border-radius: 8px;
             }
-            #action-layer {
-                /* Float actions directly above the stats container on mobile */
-                top: auto;
-                bottom: 100px;
-                right: 50%;
-                transform: translateX(50%);
-            }
-            input[type="number"] { width: 100%; max-width: 110px; }
         }
     </style>
 </head>
 <body>
     <canvas id="simCanvas"></canvas>
-    
-    <div id="action-layer" style="display: none;">
-        <button id="pauseBtn" class="icon-btn" title="Pause">
-            <svg id="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-            <svg id="icon-play" viewBox="0 0 24 24" style="display:none;"><path d="M8 5v14l11-7z"/></svg>
-        </button>
-        <button id="stopBtn" class="icon-btn btn-danger" title="Stop">
-            <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
-        </button>
-    </div>
 
     <div id="ui-layer">
         <div id="ui-content">
             <div class="panel controls" id="controlsWrap">
+                <h1 class="brand-title">Collision</h1>
                 <div class="inputs-row">
                     <div class="input-group">
-                        <span class="stat-label">Max Balls</span>
-                        <input type="number" id="maxBallsInput" value="100" min="2" max="1000">
+                        <span class="stat-label">Shape</span>
+                        <select id="shapeInput" class="input-styled">
+                             <option value="circle">Circle</option>
+                             <option value="3">Triangle</option>
+                             <option value="rectangle">Rectangle</option>
+                             <option value="4">Square</option>
+                             <option value="rhombus">Rhombus</option>
+                             <option value="parallelogram">Parallelo</option>
+                             <option value="trapezoid">Trapezoid</option>
+                             <option value="right-triangle">Right Tri</option>
+                             <option value="5">Pentagon</option>
+                             <option value="6">Hexagon</option>
+                             <option value="7">Heptagon</option>
+                             <option value="8">Octagon</option>
+                             <option value="10">Decagon</option>
+                             <option value="12">12-gon</option>
+                             <option value="14">14-gon</option>
+                             <option value="16">16-gon</option>
+                        </select>
                     </div>
                     
+                    <div class="input-group">
+                        <span class="stat-label">Max Balls</span>
+                        <input type="number" id="maxBallsInput" class="input-styled" value="100" min="2" max="1000">
+                    </div>
                     <div class="input-group">
                         <span class="stat-label">Spawn/Sec</span>
-                        <input type="number" id="spawnRateInput" value="20" min="1" max="1000">
+                        <input type="number" id="spawnRateInput" class="input-styled" value="20" min="1" max="1000">
                     </div>
-                    
                     <div class="input-group">
                         <span class="stat-label">Size %</span>
-                        <input type="number" id="sizeInput" value="100" min="10" max="500" step="10">
+                        <input type="number" id="sizeInput" class="input-styled" value="100" min="10" max="500" step="10">
                     </div>
-                    
                     <div class="input-group">
                         <span class="stat-label">Speed %</span>
-                        <input type="number" id="speedInput" value="100" min="10" max="500" step="10">
+                        <input type="number" id="speedInput" class="input-styled" value="100" min="10" max="500" step="10">
                     </div>
                 </div>
                 <a href="https://avasz.github.io/webfidget" target="_blank" class="brand-link">avasz.github.io/webfidget</a>
             </div>
             
-            <div class="panel stats" id="statsWrap">
-                <div class="stat-row">
-                    <span class="stat-label">Time</span>
-                    <span class="stat-value" id="timeStat">0.0s</span>
+            <div id="canvas-spacer" style="flex-grow: 1;"></div>
+            
+            <div id="bottomUiWrap">
+                <div id="action-layer" style="display: none;">
+                    <button id="pauseBtn" class="icon-btn" title="Pause">
+                        <svg id="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        <svg id="icon-play" viewBox="0 0 24 24" style="display:none;"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                    <button id="stopBtn" class="icon-btn btn-danger" title="Stop">
+                        <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+                    </button>
                 </div>
-                <div class="stat-row">
-                    <span class="stat-label">FPS</span>
-                    <span class="stat-value" id="fpsStat">0</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Balls</span>
-                    <span class="stat-value" id="ballsStat">0</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Hits</span>
-                    <span class="stat-value" id="collisionsStat">0</span>
+                
+                <div class="panel stats" id="statsWrap">
+                    <div class="stat-row">
+                        <span class="stat-label">Time</span>
+                        <span class="stat-value" id="timeStat">0.0s</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">FPS</span>
+                        <span class="stat-value" id="fpsStat">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Balls</span>
+                        <span class="stat-value" id="ballsStat">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Hits</span>
+                        <span class="stat-value" id="collisionsStat">0</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -355,14 +375,13 @@
         const canvas = document.getElementById('simCanvas');
         const ctx = canvas.getContext('2d');
         
-        // UI
         const timeStat = document.getElementById('timeStat');
         const fpsStat = document.getElementById('fpsStat');
         const ballsStat = document.getElementById('ballsStat');
         const collisionsStat = document.getElementById('collisionsStat');
         
         const controlsWrap = document.getElementById('controlsWrap');
-        const statsWrap = document.getElementById('statsWrap');
+        const bottomUiWrap = document.getElementById('bottomUiWrap');
         const actionLayer = document.getElementById('action-layer');
         
         const pauseBtn = document.getElementById('pauseBtn');
@@ -370,6 +389,7 @@
         const iconPause = document.getElementById('icon-pause');
         const iconPlay = document.getElementById('icon-play');
         
+        const shapeInput = document.getElementById('shapeInput');
         const maxBallsInput = document.getElementById('maxBallsInput');
         const speedInput = document.getElementById('speedInput');
         const spawnRateInput = document.getElementById('spawnRateInput');
@@ -378,53 +398,45 @@
         const reportModal = document.getElementById('reportModal');
         const closeReportBtn = document.getElementById('closeReportBtn');
 
-        // States
-        let hasStarted = false;
-        let isPaused = false;
-        let isReportShowing = false;
-        
-        // Sim Data
-        let balls = [];
-        let totalCollisions = 0;
-        let totalGenerated = 0;
-        let animationId;
-        let spawnTimestamps = []; 
+        let hasStarted = false, isPaused = false, isReportShowing = false;
+        let balls = [], totalCollisions = 0, totalGenerated = 0;
+        let animationId, spawnTimestamps = []; 
 
         const isMobileScreen = window.innerWidth <= 800;
         let baseRadius = isMobileScreen ? 3 : 8;
         let baseInitialSpeed = isMobileScreen ? 3 : 5;
         let baseSpawnSpeed = isMobileScreen ? 2 : 3;
         
-        let maxBalls = 100;
-        let maxSpawnsPerSecond = 20;
-        let timeScale = 1.0; 
-        let currentRadius = baseRadius;
+        let currentShape = 'circle';
+        let boundaryEdges = [];
+        let maxBalls = 100, maxSpawnsPerSecond = 20, timeScale = 1.0, currentRadius = baseRadius;
 
         let centerX, centerY, boundaryRadius;
         const collisionCooldownFrames = 10;
 
-        let lastTimestamp = 0;
-        let simTimeElapsed = 0;
-        let frameCount = 0;
-        let lastFpsUpdate = 0;
-        let currentFps = 0;
-        let peakFps = 0;
+        let lastTimestamp = 0, simTimeElapsed = 0, frameCount = 0;
+        let lastFpsUpdate = 0, currentFps = 0, peakFps = 0;
 
-        // Binds
         maxBallsInput.addEventListener('input', () => { maxBalls = parseInt(maxBallsInput.value) || 100; });
         spawnRateInput.addEventListener('input', () => { maxSpawnsPerSecond = parseInt(spawnRateInput.value) || 20; });
         
         speedInput.addEventListener('input', () => { 
-            let percent = parseInt(speedInput.value) || 100;
-            timeScale = percent / 100; 
+            timeScale = (parseInt(speedInput.value) || 100) / 100; 
         });
 
         sizeInput.addEventListener('input', () => { 
-            let percent = parseInt(sizeInput.value) || 100; 
-            currentRadius = baseRadius * (percent / 100);
-            if (currentRadius < 1) currentRadius = 1;
+            currentRadius = Math.max(1, baseRadius * ((parseInt(sizeInput.value) || 100) / 100));
             for(let b of balls) { b.radius = currentRadius; }
             if(!hasStarted && !isReportShowing && balls.length === 0) draw();
+        });
+
+        shapeInput.addEventListener('change', () => {
+            currentShape = shapeInput.value;
+            if(!hasStarted && !isReportShowing && balls.length === 0) {
+                updateBoundaryEdges(); draw();
+            } else if(hasStarted) {
+                updateBoundaryEdges(); draw();
+            }
         });
         
         let audioCtx;
@@ -433,39 +445,66 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        // Only Boundary Tones Remain
-        function playSound(type, param) {
+        function playSound(type, param=0) {
             if (!audioCtx || audioCtx.state !== 'running') return;
             if (type === 'boundary') {
                 const now = audioCtx.currentTime;
-                const frequencies = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
-                let normAngle = (param + Math.PI) / (2 * Math.PI); 
-                let noteIndex = Math.floor(normAngle * frequencies.length);
-                if (noteIndex >= frequencies.length) noteIndex = frequencies.length - 1;
-                
-                const baseFreq = frequencies[noteIndex];
-
+                // dynamic frequency based on impact intensity or angle
+                const baseFreq = 300 + (Math.abs(param) * 100);
                 const osc = audioCtx.createOscillator();
-                const osc2 = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                
-                osc.connect(gain);
-                osc2.connect(gain);
-                gain.connect(audioCtx.destination);
-                
+                osc.connect(gain); gain.connect(audioCtx.destination);
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(baseFreq, now);
-                osc2.type = 'triangle'; 
-                osc2.frequency.setValueAtTime(baseFreq * 2.02, now);
-
                 gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.3, now + 0.01);
+                gain.gain.linearRampToValueAtTime(0.2, now + 0.01);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+                osc.start(now); osc.stop(now + 0.8);
+            }
+        }
+
+        function getBoundaryShapePoints(type, cx, cy, radius) {
+            if (type === 'circle') return null;
+            let points = [];
+            const cc = (x,y) => ({ x: cx + x * radius, y: cy + y * radius });
+            
+            if (!isNaN(parseInt(type))) {
+                const sides = parseInt(type);
+                // CCW generator (starts from top due to -PI/2)
+                const startAngle = -Math.PI / 2; 
+                for(let i=0; i<sides; i++) {
+                    const a = startAngle + (Math.PI * 2 * i) / sides;
+                    points.push({ x: cx + Math.cos(a)*radius, y: cy + Math.sin(a)*radius });
+                }
+            } else if (type === 'rectangle') {
+                points = [ cc(-1, -0.6), cc(1, -0.6), cc(1, 0.6), cc(-1, 0.6) ]; 
+            } else if (type === 'rhombus') {
+                points = [ cc(0, -1), cc(0.8, 0), cc(0, 1), cc(-0.8, 0) ]; 
+            } else if (type === 'parallelogram') {
+                points = [ cc(-0.6, -0.6), cc(1, -0.6), cc(0.6, 0.6), cc(-1, 0.6) ]; 
+            } else if (type === 'trapezoid') {
+                points = [ cc(-0.5, -0.6), cc(0.5, -0.6), cc(0.9, 0.6), cc(-0.9, 0.6) ]; 
+            } else if (type === 'right-triangle') {
+                points = [ cc(-0.8, -0.8), cc(0.8, 0.8), cc(-0.8, 0.8) ]; 
+            }
+            return points;
+        }
+
+        function updateBoundaryEdges() {
+            boundaryEdges = [];
+            const pts = getBoundaryShapePoints(currentShape, centerX, centerY, boundaryRadius);
+            if (!pts) return;
+            
+            for(let i=0; i<pts.length; i++) {
+                const p1 = pts[i];
+                const p2 = pts[(i+1)%pts.length];
+                let dx = p2.x - p1.x;
+                let dy = p2.y - p1.y;
+                let len = Math.hypot(dx, dy);
                 
-                osc.start(now);
-                osc2.start(now);
-                osc.stop(now + 0.8);
-                osc2.stop(now + 0.8);
+                let nx = -dy / len;
+                let ny = dx / len;
+                boundaryEdges.push({ p1, p2, nx, ny, len, dx, dy });
             }
         }
 
@@ -498,18 +537,12 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
+            // Strict DOM metrics driving vertical flex bounds perfectly removes overlaps!
             const ctrlsRect = controlsWrap.getBoundingClientRect();
-            const statsRect = statsWrap.getBoundingClientRect();
+            const botRect = bottomUiWrap.getBoundingClientRect();
             
-            const topUiHeight = ctrlsRect.bottom + 10;
-            let botUiHeight = canvas.height - statsRect.top + 10;
-            
-            // Adjust overlay actions layout if on mobile and factor it cleanly into bottom bounds
-            if (window.innerWidth <= 800 && hasStarted) {
-                actionLayer.style.bottom = botUiHeight + 10 + 'px';
-                // Incorporate action buttons height to the bottom so circle shifts up and escapes them purely
-                botUiHeight += 70; 
-            }
+            const topUiHeight = ctrlsRect.bottom;
+            const botUiHeight = canvas.height - botRect.top;
             
             centerX = canvas.width / 2;
             const clearHeightSpace = canvas.height - topUiHeight - botUiHeight;
@@ -518,6 +551,7 @@
             boundaryRadius = Math.min((canvas.width / 2) - 15, (clearHeightSpace / 2) - 10);
             if (boundaryRadius < 30) boundaryRadius = 30; 
             
+            updateBoundaryEdges();
             if (!hasStarted) draw(); 
         }
 
@@ -551,11 +585,12 @@
             timeScale = (parseInt(speedInput.value) || 100) / 100;
             maxSpawnsPerSecond = parseInt(spawnRateInput.value) || 20;
             currentRadius = baseRadius * ((parseInt(sizeInput.value) || 100) / 100);
+            currentShape = shapeInput.value;
             
-            resize(); // recalculate bounds for mobile now that actionLayer spawned!
+            resize(); 
             
-            spawnBall(centerX - 20, centerY, baseInitialSpeed);
-            spawnBall(centerX + 20, centerY, baseInitialSpeed);
+            spawnBall(centerX, centerY, baseInitialSpeed);
+            spawnBall(centerX + 15, centerY, baseInitialSpeed);
             
             requestAnimationFrame(loop);
         }
@@ -575,7 +610,6 @@
         stopBtn.addEventListener('click', () => {
             if (!hasStarted) return;
             hasStarted = false; isPaused = false; isReportShowing = true;
-            
             actionLayer.style.display = 'none';
             
             document.getElementById('repTime').textContent = (simTimeElapsed / 1000).toFixed(1) + "s";
@@ -585,8 +619,7 @@
             document.getElementById('repCol').textContent = totalCollisions;
             
             reportModal.style.display = 'block';
-            resize(); // recalculate spacing down
-            draw(); 
+            resize(); draw(); 
         });
 
         closeReportBtn.addEventListener('click', () => {
@@ -599,34 +632,78 @@
 
         canvas.addEventListener('click', (e) => {
             if (!hasStarted && !isReportShowing && e.target.tagName === 'CANVAS') {
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left - centerX;
-                const y = e.clientY - rect.top - centerY;
-                if (Math.hypot(x, y) < boundaryRadius) initSimulation();
+                initSimulation();
             }
         });
 
         function handleBoundaryCollision(ball) {
-            const dx = ball.x - centerX; const dy = ball.y - centerY;
-            const distSq = dx * dx + dy * dy; const maxDist = boundaryRadius - ball.radius;
+            if (currentShape === 'circle') {
+                const dx = ball.x - centerX; const dy = ball.y - centerY;
+                const distSq = dx * dx + dy * dy; const maxDist = boundaryRadius - ball.radius;
 
-            if (distSq > maxDist * maxDist) {
-                const angle = Math.atan2(dy, dx);
-                playSound('boundary', angle); 
-                
-                const dist = Math.sqrt(distSq);
-                const nx = dx / dist; const ny = dy / dist;
+                if (distSq > maxDist * maxDist) {
+                    const dist = Math.sqrt(distSq);
+                    const nx = dx / dist; const ny = dy / dist;
 
-                ball.x = centerX + nx * maxDist; ball.y = centerY + ny * maxDist;
-                const dotProduct = ball.vx * nx + ball.vy * ny;
-                ball.vx = ball.vx - 2 * dotProduct * nx; ball.vy = ball.vy - 2 * dotProduct * ny;
-                
-                const speedSq = ball.vx * ball.vx + ball.vy * ball.vy;
-                const MaxSpeedSq = 80; 
-                if(speedSq > MaxSpeedSq) {
-                    const speed = Math.sqrt(speedSq);
-                    ball.vx = (ball.vx / speed) * Math.sqrt(MaxSpeedSq);
-                    ball.vy = (ball.vy / speed) * Math.sqrt(MaxSpeedSq);
+                    ball.x = centerX + nx * maxDist; ball.y = centerY + ny * maxDist;
+                    const dotProduct = ball.vx * nx + ball.vy * ny;
+                    ball.vx = ball.vx - 2 * dotProduct * nx; ball.vy = ball.vy - 2 * dotProduct * ny;
+                    
+                    playSound('boundary', ball.vx); 
+                    
+                    const speedSq = ball.vx * ball.vx + ball.vy * ball.vy;
+                    const MaxSpeedSq = 80; 
+                    if(speedSq > MaxSpeedSq) {
+                        const speed = Math.sqrt(speedSq);
+                        ball.vx = (ball.vx / speed) * Math.sqrt(MaxSpeedSq);
+                        ball.vy = (ball.vy / speed) * Math.sqrt(MaxSpeedSq);
+                    }
+                }
+            } else {
+                // Polygon Boundary Engine
+                for (let edge of boundaryEdges) {
+                    let bx = ball.x - edge.p1.x;
+                    let by = ball.y - edge.p1.y;
+                    
+                    let dist = bx * edge.nx + by * edge.ny;
+                    
+                    if (dist < ball.radius) {
+                        let dotSegment = bx * (edge.dx/edge.len) + by * (edge.dy/edge.len);
+
+                        if (dotSegment >= 0 && dotSegment <= edge.len) {
+                            let overlap = ball.radius - dist;
+                            ball.x += edge.nx * overlap;
+                            ball.y += edge.ny * overlap;
+                            
+                            let dotV = ball.vx * edge.nx + ball.vy * edge.ny;
+                            if (dotV < 0) {
+                                ball.vx -= 2 * dotV * edge.nx;
+                                ball.vy -= 2 * dotV * edge.ny;
+                                playSound('boundary', dotV);
+                            }
+                        } else {
+                            let corner = dotSegment < 0 ? edge.p1 : edge.p2;
+                            let cx = ball.x - corner.x;
+                            let cy = ball.y - corner.y;
+                            let cDistSq = cx*cx + cy*cy;
+                            
+                            if (cDistSq > 0 && cDistSq < ball.radius*ball.radius) {
+                                let cDist = Math.sqrt(cDistSq);
+                                let overlap = ball.radius - cDist;
+                                let cnx = cx / cDist; let cny = cy / cDist;
+                                
+                                ball.x += cnx * overlap;
+                                ball.y += cny * overlap;
+                                
+                                let dotV = ball.vx * cnx + ball.vy * cny;
+                                if (dotV < 0) {
+                                    ball.vx -= 2 * dotV * cnx;
+                                    ball.vy -= 2 * dotV * cny;
+                                    playSound('boundary', dotV);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -692,27 +769,32 @@
                 ball.update(); handleBoundaryCollision(ball);
             }
             handleBallCollisions(now);
-            for (let ball of balls) {
-                const dx = ball.x - centerX; const dy = ball.y - centerY;
-                const distSq = dx * dx + dy * dy; const maxDist = boundaryRadius - ball.radius;
-                if(distSq > maxDist * maxDist) {
-                    const dist = Math.sqrt(distSq);
-                    ball.x = centerX + (dx / dist) * maxDist; ball.y = centerY + (dy / dist) * maxDist;
-                }
-            }
+            
             ballsStat.textContent = balls.length; collisionsStat.textContent = totalCollisions;
             timeStat.textContent = (simTimeElapsed / 1000).toFixed(1) + "s";
+        }
+
+        function drawBoundary() {
+            ctx.beginPath();
+            if (currentShape === 'circle') {
+                ctx.arc(centerX, centerY, boundaryRadius, 0, Math.PI * 2);
+            } else {
+                const pts = getBoundaryShapePoints(currentShape, centerX, centerY, boundaryRadius);
+                if (pts && pts.length > 0) {
+                    ctx.moveTo(pts[0].x, pts[0].y);
+                    for(let i=1; i<pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+                    ctx.closePath();
+                }
+            }
+            ctx.strokeStyle = 'rgba(102, 252, 241, 0.4)'; ctx.lineWidth = 3; ctx.stroke();
+            ctx.shadowColor = 'rgba(102, 252, 241, 0.5)';
+            ctx.shadowBlur = 20; ctx.stroke(); ctx.shadowBlur = 0;
         }
 
         function draw() {
             ctx.fillStyle = 'rgba(11, 12, 16, 0.3)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, boundaryRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(102, 252, 241, 0.4)'; ctx.lineWidth = 3; ctx.stroke();
-            
-            ctx.shadowColor = 'rgba(102, 252, 241, 0.5)';
-            ctx.shadowBlur = 20; ctx.stroke(); ctx.shadowBlur = 0;
+            drawBoundary();
 
             if (!hasStarted && !isReportShowing) {
                 ctx.fillStyle = 'rgba(102, 252, 241, 0.7)';
@@ -722,7 +804,9 @@
                 ctx.fillText("▶ START", centerX, centerY); 
                 
                 ctx.beginPath();
-                ctx.arc(centerX, centerY, (Math.sin(performance.now()/300)*10) + boundaryRadius/2.8, 0, Math.PI*2);
+                if (currentShape === 'circle') {
+                    ctx.arc(centerX, centerY, (Math.sin(performance.now()/300)*10) + boundaryRadius/2.8, 0, Math.PI*2);
+                }
                 ctx.strokeStyle = 'rgba(102, 252, 241, 0.1)'; ctx.lineWidth = 2; ctx.stroke();
             }
 
@@ -747,8 +831,6 @@
             update(performance.now()); draw();
             animationId = requestAnimationFrame(loop);
         }
-
-        resize();
     </script>
 </body>
 </html>
