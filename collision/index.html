@@ -53,7 +53,7 @@
             justify-content: space-between;
             align-items: center;
             height: 100%;
-            padding: 15px;
+            padding: 10px;
             padding-bottom: 25px;
         }
 
@@ -61,8 +61,8 @@
             background-color: var(--panel-bg);
             border: 1px solid rgba(102, 252, 241, 0.15);
             backdrop-filter: blur(12px);
-            border-radius: 16px;
-            padding: 12px 20px;
+            border-radius: 12px;
+            padding: 8px 12px;
             pointer-events: auto;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
@@ -70,9 +70,10 @@
         .controls {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
             align-items: stretch;
             width: 100%;
+            max-width: 800px;
         }
 
         .brand-title {
@@ -81,15 +82,15 @@
             text-transform: uppercase;
             font-weight: 900;
             letter-spacing: 4px;
-            font-size: 18px;
+            font-size: 14px;
             margin: 0;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             text-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
         }
 
         .inputs-row {
             display: flex;
-            gap: 20px;
+            gap: 12px;
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -98,9 +99,9 @@
             text-align: center;
             color: var(--accent-dim);
             text-decoration: none;
-            font-size: 13px;
+            font-size: 11px;
             font-weight: bold;
-            padding-top: 10px;
+            padding-top: 6px;
             border-top: 1px solid rgba(102, 252, 241, 0.12);
             letter-spacing: 1px;
             transition: color 0.2s;
@@ -112,13 +113,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             width: 100%;
         }
 
         .stats {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             min-width: 250px;
             justify-content: center;
         }
@@ -134,14 +135,14 @@
             color: #888;
             text-transform: uppercase;
             letter-spacing: 1px;
-            font-size: 11px;
+            font-size: 10px;
             margin-bottom: 4px;
         }
 
         .stat-value {
             color: var(--accent);
             font-weight: bold;
-            font-size: 15px;
+            font-size: 14px;
             text-shadow: 0 0 5px rgba(102, 252, 241, 0.5);
         }
 
@@ -151,28 +152,29 @@
             align-items: center;
         }
         
-        .input-group .stat-label { margin-bottom: 6px; }
+        .input-group .stat-label { margin-bottom: 4px; }
 
         .input-styled {
             background: rgba(0,0,0,0.5);
             border: 1px solid rgba(102, 252, 241, 0.3);
             color: var(--accent);
-            padding: 6px 4px;
+            padding: 4px;
             text-align: center;
-            border-radius: 8px;
+            border-radius: 6px;
             font-family: 'Courier New', Courier, monospace;
             font-weight: bold;
-            font-size: 14px;
-            width: 70px;
+            font-size: 13px;
+            width: 60px;
+            height: 28px;
             outline: none;
             transition: all 0.2s;
         }
         
         select.input-styled {
             width: auto;
-            min-width: 100px;
+            min-width: 90px;
             cursor: pointer;
-            padding: 6px 10px;
+            padding: 4px 6px;
         }
         select.input-styled option {
             background: var(--bg-color);
@@ -188,8 +190,9 @@
         /* Actions Layout within flow */
         #action-layer {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             pointer-events: auto;
+            justify-content: center;
         }
 
         .icon-btn {
@@ -198,14 +201,14 @@
             color: var(--accent);
             border-radius: 50%;
             cursor: pointer;
-            width: 50px;
-            height: 50px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             transition: all 0.2s;
-            padding: 12px;
+            padding: 10px;
             backdrop-filter: blur(8px);
         }
         
@@ -261,16 +264,17 @@
         }
 
         @media (max-width: 800px) {
-            #ui-content { padding: 10px; }
-            .inputs-row { padding-bottom: 5px; gap: 8px; }
-            .panel { padding: 15px 10px; }
+            #ui-content { padding: 6px; padding-bottom: 20px; }
+            .inputs-row { padding-bottom: 3px; gap: 8px; display: grid; grid-template-columns: repeat(2, 1fr); max-width: 320px; margin: 0 auto; }
+            .panel { padding: 10px 8px; }
             .stats { flex-wrap: wrap; gap: 8px; }
             .stat-row {
                 background: rgba(0,0,0,0.3);
                 border: 1px solid rgba(102, 252, 241, 0.1);
-                padding: 6px 12px;
-                border-radius: 8px;
+                padding: 4px 10px;
+                border-radius: 6px;
             }
+            .input-styled { width: 100%; max-width: 100px; }
         }
     </style>
 </head>
@@ -316,9 +320,9 @@
                         <span class="stat-label">Size %</span>
                         <input type="number" id="sizeInput" class="input-styled" value="100" min="10" max="500" step="10">
                     </div>
-                    <div class="input-group">
+                    <div class="input-group" style="grid-column: 1 / -1; margin-top: -4px;">
                         <span class="stat-label">Speed %</span>
-                        <input type="number" id="speedInput" class="input-styled" value="100" min="10" max="500" step="10">
+                        <input type="number" id="speedInput" class="input-styled" value="100" min="10" max="500" step="10" style="max-width: 150px;">
                     </div>
                 </div>
                 <a href="https://avasz.github.io/webfidget" target="_blank" class="brand-link">avasz.github.io/webfidget</a>
@@ -328,6 +332,9 @@
             
             <div id="bottomUiWrap">
                 <div id="action-layer" style="display: none;">
+                    <button id="resetBtn" class="icon-btn" title="Restart">
+                        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                    </button>
                     <button id="pauseBtn" class="icon-btn" title="Pause">
                         <svg id="icon-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                         <svg id="icon-play" viewBox="0 0 24 24" style="display:none;"><path d="M8 5v14l11-7z"/></svg>
@@ -359,6 +366,7 @@
         </div>
     </div>
 
+    <!-- Report Modal remains absolutely centered! -->
     <div id="reportModal" class="panel">
         <h2>Report</h2>
         <a href="https://avasz.github.io/webfidget" target="_blank" class="modal-src">avasz.github.io/webfidget</a>
@@ -384,6 +392,7 @@
         const bottomUiWrap = document.getElementById('bottomUiWrap');
         const actionLayer = document.getElementById('action-layer');
         
+        const resetBtn = document.getElementById('resetBtn');
         const pauseBtn = document.getElementById('pauseBtn');
         const stopBtn = document.getElementById('stopBtn');
         const iconPause = document.getElementById('icon-pause');
@@ -432,11 +441,8 @@
 
         shapeInput.addEventListener('change', () => {
             currentShape = shapeInput.value;
-            if(!hasStarted && !isReportShowing && balls.length === 0) {
-                updateBoundaryEdges(); draw();
-            } else if(hasStarted) {
-                updateBoundaryEdges(); draw();
-            }
+            // Force pure resize propagation to visually show the shape change prior to starting tracking!
+            resize(); 
         });
         
         let audioCtx;
@@ -445,21 +451,39 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
+        // Restored EXACT audio dual osc array!
         function playSound(type, param=0) {
             if (!audioCtx || audioCtx.state !== 'running') return;
             if (type === 'boundary') {
+                const frequencies = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
+                let normAngle = (param + Math.PI) / (2 * Math.PI); 
+                let noteIndex = Math.floor(normAngle * frequencies.length);
+                if (noteIndex >= frequencies.length) noteIndex = frequencies.length - 1;
+                
+                const baseFreq = frequencies[noteIndex];
+
                 const now = audioCtx.currentTime;
-                // dynamic frequency based on impact intensity or angle
-                const baseFreq = 300 + (Math.abs(param) * 100);
                 const osc = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.connect(gain); gain.connect(audioCtx.destination);
+                
+                osc.connect(gain);
+                osc2.connect(gain);
+                gain.connect(audioCtx.destination);
+                
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(baseFreq, now);
+                osc2.type = 'triangle'; 
+                osc2.frequency.setValueAtTime(baseFreq * 2.02, now);
+
                 gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.2, now + 0.01);
+                gain.gain.linearRampToValueAtTime(0.3, now + 0.01);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-                osc.start(now); osc.stop(now + 0.8);
+                
+                osc.start(now);
+                osc2.start(now);
+                osc.stop(now + 0.8);
+                osc2.stop(now + 0.8);
             }
         }
 
@@ -470,7 +494,6 @@
             
             if (!isNaN(parseInt(type))) {
                 const sides = parseInt(type);
-                // CCW generator (starts from top due to -PI/2)
                 const startAngle = -Math.PI / 2; 
                 for(let i=0; i<sides; i++) {
                     const a = startAngle + (Math.PI * 2 * i) / sides;
@@ -537,7 +560,6 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            // Strict DOM metrics driving vertical flex bounds perfectly removes overlaps!
             const ctrlsRect = controlsWrap.getBoundingClientRect();
             const botRect = bottomUiWrap.getBoundingClientRect();
             
@@ -569,7 +591,7 @@
             return newBall;
         }
 
-        function initSimulation() {
+        function triggerEmptyStart() {
             initAudio(); 
             hasStarted = true; isPaused = false; isReportShowing = false;
             
@@ -588,12 +610,20 @@
             currentShape = shapeInput.value;
             
             resize(); 
-            
             spawnBall(centerX, centerY, baseInitialSpeed);
             spawnBall(centerX + 15, centerY, baseInitialSpeed);
-            
+        }
+
+        function initSimulation() {
+            triggerEmptyStart();
             requestAnimationFrame(loop);
         }
+
+        resetBtn.addEventListener('click', () => {
+            if (!hasStarted) return;
+            // Purges state and instantly respawns fresh starting balls without triggering metrics modal
+            triggerEmptyStart();
+        });
 
         pauseBtn.addEventListener('click', () => {
             if (!hasStarted) return;
@@ -649,7 +679,7 @@
                     const dotProduct = ball.vx * nx + ball.vy * ny;
                     ball.vx = ball.vx - 2 * dotProduct * nx; ball.vy = ball.vy - 2 * dotProduct * ny;
                     
-                    playSound('boundary', ball.vx); 
+                    playSound('boundary', Math.atan2(ny, nx)); // correctly calculate reflection pitch angle!
                     
                     const speedSq = ball.vx * ball.vx + ball.vy * ball.vy;
                     const MaxSpeedSq = 80; 
@@ -679,7 +709,7 @@
                             if (dotV < 0) {
                                 ball.vx -= 2 * dotV * edge.nx;
                                 ball.vy -= 2 * dotV * edge.ny;
-                                playSound('boundary', dotV);
+                                playSound('boundary', Math.atan2(edge.ny, edge.nx)); 
                             }
                         } else {
                             let corner = dotSegment < 0 ? edge.p1 : edge.p2;
@@ -699,7 +729,7 @@
                                 if (dotV < 0) {
                                     ball.vx -= 2 * dotV * cnx;
                                     ball.vy -= 2 * dotV * cny;
-                                    playSound('boundary', dotV);
+                                    playSound('boundary', Math.atan2(cny, cnx));
                                 }
                             }
                         }
@@ -806,6 +836,14 @@
                 ctx.beginPath();
                 if (currentShape === 'circle') {
                     ctx.arc(centerX, centerY, (Math.sin(performance.now()/300)*10) + boundaryRadius/2.8, 0, Math.PI*2);
+                } else {
+                    const dynamicRadius = (Math.sin(performance.now()/300)*10) + boundaryRadius/2.8;
+                    const pts = getBoundaryShapePoints(currentShape, centerX, centerY, dynamicRadius);
+                    if(pts && pts.length > 0) {
+                        ctx.moveTo(pts[0].x, pts[0].y);
+                        for(let i=1; i<pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+                        ctx.closePath();
+                    }
                 }
                 ctx.strokeStyle = 'rgba(102, 252, 241, 0.1)'; ctx.lineWidth = 2; ctx.stroke();
             }
