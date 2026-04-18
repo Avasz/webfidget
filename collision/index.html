@@ -82,7 +82,8 @@
             flex-direction: column;
             justify-content: space-between;
             height: 100%;
-            padding: 15px 50px 25px 15px; /* bottom 25px padding gives breathing room mapping over footer */
+            padding: 15px;
+            padding-right: 55px; /* Give right padding so it avoids the toggle button */
         }
 
         .panel {
@@ -170,6 +171,25 @@
             transform: scale(0.95);
         }
         
+        .brand-pill {
+            text-decoration: none;
+            color: var(--accent);
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--accent);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 12px;
+            letter-spacing: 1px;
+            pointer-events: auto;
+            white-space: nowrap;
+        }
+
+        .brand-pill:hover {
+            background: var(--accent);
+            color: var(--bg-color);
+        }
+
         a.btn-back {
             color: #888;
             border: 1px solid #888;
@@ -228,17 +248,30 @@
             transform: translate(-50%, -50%);
             display: none;
             text-align: center;
-            min-width: 300px;
+            min-width: 320px;
             z-index: 2000;
             padding: 30px;
+            pointer-events: auto;
         }
         
         #reportModal h2 {
             margin-top: 0;
             color: var(--accent);
-            margin-bottom: 20px;
+            margin-bottom: 5px;
         }
         
+        #reportModal .modal-src {
+            color: #aaa;
+            text-decoration: none;
+            font-size: 12px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        
+        #reportModal .modal-src:hover {
+            color: var(--accent);
+        }
+
         #reportModal p {
             margin: 10px 0;
             display: flex;
@@ -246,32 +279,10 @@
             border-bottom: 1px solid rgba(255,255,255,0.1);
             padding-bottom: 5px;
         }
-        
-        #footer {
-            position: absolute;
-            bottom: 5px;
-            right: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 11px;
-            color: #777;
-            z-index: 10;
-            pointer-events: none; /* Let clicks pass through except on the link */
-        }
-        #footer a {
-            color: var(--accent-dim);
-            text-decoration: none;
-            pointer-events: auto; 
-        }
-        #footer a:hover {
-            color: var(--accent);
-            text-decoration: underline;
-        }
 
         @media (max-width: 800px) {
             #ui-content {
                 padding: 10px;
-                padding-bottom: 35px; /* Leave space for bottom footer */
             }
             .controls {
                 justify-content: center;
@@ -307,14 +318,12 @@
     
     <button id="toggleUiBtn" title="Toggle Controls">⚙</button>
     
-    <div id="footer">
-        source: <a href="https://avasz.github.io/webfidget/collision" target="_blank">avasz.github.io/webfidget</a>
-    </div>
-
     <div id="ui-layer">
         <div id="ui-content">
             <div class="panel controls">
                 <a href="../" class="btn-back">Hub</a>
+                <a href="https://avasz.github.io/webfidget" target="_blank" class="brand-pill">avasz.github.io/webfidget</a>
+                
                 <button id="pauseBtn" style="display: none;">Pause</button>
                 <button id="stopBtn" class="btn-danger" style="display: none;">Stop</button>
                 
@@ -346,7 +355,7 @@
                 </div>
             </div>
             
-            <div class="panel stats">
+            <div class="panel stats" id="statsWrap">
                 <div class="stat-row">
                     <span class="stat-label">Time</span>
                     <span class="stat-value" id="timeStat">0.0s</span>
@@ -370,6 +379,8 @@
     <!-- Report Modal -->
     <div id="reportModal" class="panel">
         <h2>Simulation Report</h2>
+        <a href="https://avasz.github.io/webfidget" target="_blank" class="modal-src">avasz.github.io/webfidget</a>
+        
         <p>Execution Time:<span id="repTime" class="stat-value"></span></p>
         <p>Peak FPS:<span id="repFps" class="stat-value"></span></p>
         <p>Total Generated:<span id="repGen" class="stat-value"></span></p>
@@ -393,6 +404,7 @@
         
         const pauseBtn = document.getElementById('pauseBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const statsWrap = document.getElementById('statsWrap');
         
         const maxBallsInput = document.getElementById('maxBallsInput');
         const speedInput = document.getElementById('speedInput');
@@ -570,15 +582,19 @@
             const isMobile = window.innerWidth <= 800;
 
             if (isMobile && isUiVisible) {
-                // Dynamically offset bounds to sit perfectly between top and bottom clustered panels
-                const topUiHeight = 160; 
-                const botUiHeight = 85; 
+                // To guarantee pure clearance on mobile, we capture the bounding constraints of the control panel overlays
+                // and perfectly map the circle in the remaining center space safely.
+                const controlsRect = document.querySelector('.controls').getBoundingClientRect();
+                const statsRect = document.querySelector('#statsWrap').getBoundingClientRect();
+                
+                const topUiHeight = controlsRect.bottom + 10;
+                const botUiHeight = canvas.height - statsRect.top + 10;
+                
                 centerX = canvas.width / 2;
-                
                 const clearHeightSpace = canvas.height - topUiHeight - botUiHeight;
-                centerY = topUiHeight + (clearHeightSpace / 2); // Perfectly vertical center between both panels
+                centerY = topUiHeight + (clearHeightSpace / 2);
                 
-                boundaryRadius = Math.min((canvas.width / 2) - 10, (clearHeightSpace / 2) - 15);
+                boundaryRadius = Math.min((canvas.width / 2) - 10, (clearHeightSpace / 2) - 10);
             } else {
                 centerX = canvas.width / 2;
                 centerY = canvas.height / 2;
@@ -592,6 +608,8 @@
         }
 
         window.addEventListener('resize', resize);
+        // Force an extra resize loop slightly after paint to ensure flex layouts had correctly resolved dimensions
+        setTimeout(resize, 100);
         
         function spawnBall(x, y, speedLimit) {
             if (balls.length >= maxBalls) return null;
@@ -675,10 +693,12 @@
             fpsStat.textContent = '0';
             collisionsStat.textContent = '0';
             draw();
+            resize(); // recalc
         });
 
         canvas.addEventListener('click', (e) => {
-            if (!hasStarted && !isReportShowing) {
+            // Check if user clicked on UI layer elements directly - don't start sim if they did!
+            if (!hasStarted && !isReportShowing && e.target.tagName === 'CANVAS') {
                 const rect = canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left - centerX;
                 const y = e.clientY - rect.top - centerY;
@@ -821,6 +841,15 @@
             ctx.fillStyle = 'rgba(11, 12, 16, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Embedded watermark directly in the background canvas so it can never be hidden
+            ctx.fillStyle = 'rgba(102, 252, 241, 0.15)';
+            const wmSize = isMobileScreen ? 14 : 20;
+            ctx.font = `bold ${wmSize}px 'Courier New', monospace`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            // Paint it directly below the center inside the circle
+            ctx.fillText("avasz.github.io/webfidget", centerX, centerY + boundaryRadius - 30);
+
             ctx.beginPath();
             ctx.arc(centerX, centerY, boundaryRadius, 0, Math.PI * 2);
             ctx.strokeStyle = 'rgba(102, 252, 241, 0.4)';
@@ -838,10 +867,10 @@
                 ctx.font = `bold ${fSize}px 'Segoe UI', sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText("▶ START", centerX, centerY);
+                ctx.fillText("▶ START", centerX, centerY - 20); // slightly offset to account for watermark
                 
                 ctx.beginPath();
-                ctx.arc(centerX, centerY, (Math.sin(performance.now()/300)*10) + boundaryRadius/2.8, 0, Math.PI*2);
+                ctx.arc(centerX, centerY - 20, (Math.sin(performance.now()/300)*10) + boundaryRadius/2.8, 0, Math.PI*2);
                 ctx.strokeStyle = 'rgba(102, 252, 241, 0.1)';
                 ctx.lineWidth = 2;
                 ctx.stroke();
