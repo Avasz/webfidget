@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cellular Bounce | Web Fidget</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZRVXXK6GYF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-ZRVXXK6GYF');
+    </script>
     <style>
         :root {
             --bg-color: #0b0c10;
@@ -142,6 +151,7 @@
             letter-spacing: 1px;
             transition: all 0.2s;
             display: inline-block;
+            white-space: nowrap;
         }
         a.btn-back:hover {
             color: white;
@@ -162,6 +172,7 @@
             border-radius: 6px;
             font-family: 'Courier New', Courier, monospace;
             width: 80px;
+            height: 34px;
             outline: none;
             transition: border-color 0.2s;
         }
@@ -174,6 +185,8 @@
         input[type="range"] {
             width: 80px;
             accent-color: var(--accent);
+            height: 34px;
+            margin: 0;
         }
 
         /* Modal Overlay */
@@ -203,7 +216,7 @@
             padding-bottom: 5px;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 800px) {
             #ui-layer {
                 padding: 10px;
             }
@@ -221,20 +234,35 @@
     
     <div id="ui-layer">
         <div class="panel controls">
-            <a href="../" class="btn-back">&lt; Hub</a>
+            <a href="../" class="btn-back">Hub</a>
             <button id="pauseBtn" style="display: none;">Pause</button>
             <button id="stopBtn" class="btn-danger" style="display: none;">Stop</button>
+            
             <div class="input-group">
                 <span class="stat-label">Max Balls</span>
                 <input type="number" id="maxBallsInput" value="100" min="2" max="1000">
             </div>
+            
             <div class="input-group">
-                <span class="stat-label">Spawn/Sec Limit</span>
+                <span class="stat-label">Spawn/Sec</span>
                 <input type="number" id="spawnRateInput" value="20" min="1" max="1000">
             </div>
+            
+            <div class="input-group">
+                <span class="stat-label">Size</span>
+                <input type="range" id="sizeInput" value="8" min="2" max="30" step="1">
+            </div>
+            
             <div class="input-group">
                 <span class="stat-label">Speed</span>
                 <input type="range" id="speedInput" value="1" min="0.1" max="4" step="0.1">
+            </div>
+            
+            <div class="input-group">
+                <label style="display:flex; align-items:center; gap:5px; cursor:pointer; height: 34px;" class="stat-label">
+                    <input type="checkbox" id="muteColSoundInput" style="margin:0; width:16px; height:16px; accent-color: var(--accent);">
+                    Mute Collisions
+                </label>
             </div>
         </div>
         
@@ -278,11 +306,16 @@
         const fpsStat = document.getElementById('fpsStat');
         const ballsStat = document.getElementById('ballsStat');
         const collisionsStat = document.getElementById('collisionsStat');
+        
         const pauseBtn = document.getElementById('pauseBtn');
         const stopBtn = document.getElementById('stopBtn');
+        
         const maxBallsInput = document.getElementById('maxBallsInput');
         const speedInput = document.getElementById('speedInput');
         const spawnRateInput = document.getElementById('spawnRateInput');
+        const sizeInput = document.getElementById('sizeInput');
+        const muteColSoundInput = document.getElementById('muteColSoundInput');
+        
         const reportModal = document.getElementById('reportModal');
         const closeReportBtn = document.getElementById('closeReportBtn');
 
@@ -301,26 +334,42 @@
         let timeScale = 1;
         let maxSpawnsPerSecond = 20;
         let spawnTimestamps = []; 
+        let muteCollisions = false;
+
+        // Dynamics tailored for size defaults
+        let ballRadius = window.innerWidth <= 800 ? 5 : 8;
+        sizeInput.value = ballRadius;
 
         // Physics Environment
         let centerX, centerY, boundaryRadius;
-        const ballRadius = 8;
         const initialSpeedLimit = 5;
         const spawnSpeedLimit = 3;
         const collisionCooldownFrames = 10;
 
         // Performance & Timing
         let lastTimestamp = 0;
-        let simTimeElapsed = 0; // accumulated simulation ms
+        let simTimeElapsed = 0;
         let frameCount = 0;
         let lastFpsUpdate = 0;
         let currentFps = 0;
         let peakFps = 0;
 
-        // Inputs
+        // Inputs Binding
         maxBallsInput.addEventListener('input', () => { maxBalls = parseInt(maxBallsInput.value) || 100; });
         speedInput.addEventListener('input', () => { timeScale = parseFloat(speedInput.value) || 1; });
         spawnRateInput.addEventListener('input', () => { maxSpawnsPerSecond = parseInt(spawnRateInput.value) || 20; });
+        muteColSoundInput.addEventListener('change', (e) => { muteCollisions = e.target.checked; });
+        
+        sizeInput.addEventListener('input', () => { 
+            ballRadius = parseInt(sizeInput.value) || 8; 
+            // Update existing balls live!
+            for(let b of balls) {
+                b.radius = ballRadius;
+            }
+            if(!hasStarted && !isReportShowing && balls.length === 0) {
+                draw(); // Repaint if resting
+            }
+        });
         
         // Web Audio Context definition
         let audioCtx;
@@ -338,7 +387,6 @@
             const now = audioCtx.currentTime;
 
             if (type === 'boundary') {
-                // Determine musical note based on angle
                 const frequencies = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
                 let normAngle = (param + Math.PI) / (2 * Math.PI); 
                 let noteIndex = Math.floor(normAngle * frequencies.length);
@@ -371,6 +419,8 @@
             }
 
             if (type === 'spawn') {
+                if (muteCollisions) return; // Muted check!
+                
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
@@ -392,7 +442,7 @@
                 this.y = y;
                 this.vx = vx;
                 this.vy = vy;
-                this.radius = ballRadius;
+                this.radius = ballRadius; // Driven by the current UI slider dynamically
                 this.cooldowns = new Map();
                 this.color = `hsl(${Math.random() * 360}, 100%, 65%)`;
                 this.mass = 1;
@@ -425,17 +475,24 @@
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            centerX = canvas.width / 2;
-            centerY = canvas.height / 2;
-            
-            // Layout padding based on screen size so panels don't overlap boundary
-            let padding = window.innerWidth <= 600 ? 130 : 60;
-            // Also factor height to safely fit below top panels
-            let spaceVertical = 80; 
-            boundaryRadius = Math.min(centerX - padding/2, centerY - spaceVertical);
+            const isMobile = window.innerWidth <= 800;
+
+            if (isMobile) {
+                // Better dynamic radius calculation specifically for mobile
+                // Lower the center point to naturally fall below the stacked UI
+                const uiHeight = 180; 
+                centerX = canvas.width / 2;
+                centerY = uiHeight + (canvas.height - uiHeight) / 2;
+                // Max radius is clamped to fit within bottom/top limits comfortably allowing circle to be as large as possible horizontally and vertically
+                boundaryRadius = Math.min(canvas.width / 2 - 15, (canvas.height - uiHeight) / 2 - 20);
+            } else {
+                centerX = canvas.width / 2;
+                centerY = canvas.height / 2;
+                boundaryRadius = Math.min(centerX - 30, centerY - 80);
+            }
             if (boundaryRadius < 50) boundaryRadius = 50; 
             
-            if (!hasStarted) draw(); // Initial paint bounds
+            if (!hasStarted) draw(); 
         }
 
         window.addEventListener('resize', resize);
@@ -468,23 +525,23 @@
             spawnTimestamps = [];
             lastTimestamp = performance.now();
             
-            // Adjust buttons
             pauseBtn.style.display = 'inline-block';
             stopBtn.style.display = 'inline-block';
             pauseBtn.textContent = 'Pause';
             
+            // Re-read inputs
             maxBalls = parseInt(maxBallsInput.value) || 100;
             timeScale = parseFloat(speedInput.value) || 1;
             maxSpawnsPerSecond = parseInt(spawnRateInput.value) || 20;
+            ballRadius = parseInt(sizeInput.value) || 8;
+            muteCollisions = muteColSoundInput.checked;
             
-            // Spawning first two
             spawnBall(centerX - 20, centerY, initialSpeedLimit);
             spawnBall(centerX + 20, centerY, initialSpeedLimit);
             
             requestAnimationFrame(loop);
         }
 
-        // Action handles
         pauseBtn.addEventListener('click', () => {
             if (!hasStarted) return;
             isPaused = !isPaused;
@@ -504,7 +561,6 @@
             pauseBtn.style.display = 'none';
             stopBtn.style.display = 'none';
             
-            // Show report
             document.getElementById('repTime').textContent = (simTimeElapsed / 1000).toFixed(1) + "s";
             document.getElementById('repFps').textContent = peakFps;
             document.getElementById('repGen').textContent = totalGenerated;
@@ -512,7 +568,7 @@
             document.getElementById('repCol').textContent = totalCollisions;
             
             reportModal.style.display = 'block';
-            draw(); // Refresh canvas to render without balls or START mark properly
+            draw(); 
         });
 
         closeReportBtn.addEventListener('click', () => {
@@ -525,7 +581,6 @@
             draw();
         });
 
-        // Click to Start
         canvas.addEventListener('click', (e) => {
             if (!hasStarted && !isReportShowing) {
                 const rect = canvas.getBoundingClientRect();
@@ -579,7 +634,7 @@
                     const dx = b2.x - b1.x;
                     const dy = b2.y - b1.y;
                     const distSq = dx * dx + dy * dy;
-                    const minDist = b1.radius + b2.radius;
+                    const minDist = b1.radius + b2.radius; 
 
                     if (distSq < minDist * minDist) {
                         const dist = Math.sqrt(distSq);
@@ -598,7 +653,6 @@
                         b2.y += correctionY;
 
                         if (!b1.cooldowns.has(b2.id) && !b2.cooldowns.has(b1.id)) {
-                            // Sound removed as requested
                             const kx = b1.vx - b2.vx;
                             const ky = b1.vy - b2.vy;
                             const p = 2 * (nx * kx + ny * ky) / (b1.mass + b2.mass);
@@ -650,7 +704,6 @@
             }
             handleBallCollisions(now);
             
-            // Constrain
             for (let ball of balls) {
                 const dx = ball.x - centerX;
                 const dy = ball.y - centerY;
@@ -685,15 +738,14 @@
 
             if (!hasStarted && !isReportShowing) {
                 ctx.fillStyle = 'rgba(102, 252, 241, 0.7)';
-                const fSize = Math.max(20, boundaryRadius / 4);
+                const fSize = Math.max(20, boundaryRadius / 5);
                 ctx.font = `bold ${fSize}px 'Segoe UI', sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText("▶ START", centerX, centerY);
                 
-                // Pulsing ring guide
                 ctx.beginPath();
-                ctx.arc(centerX, centerY, (Math.sin(performance.now()/300)*10) + boundaryRadius/2.5, 0, Math.PI*2);
+                ctx.arc(centerX, centerY, (Math.sin(performance.now()/300)*10) + boundaryRadius/2.8, 0, Math.PI*2);
                 ctx.strokeStyle = 'rgba(102, 252, 241, 0.1)';
                 ctx.lineWidth = 2;
                 ctx.stroke();
@@ -728,7 +780,6 @@
             animationId = requestAnimationFrame(loop);
         }
 
-        // Init blank state
         resize();
     </script>
 </body>
